@@ -26,3 +26,7 @@ jax-rs是写restful api常用的技术
 >{"title":"test","singer":"dog"} 
   
   格式选 application/json; charset=UTF-8
+  
+##demo实现步骤
+
+请参考notes.doc
