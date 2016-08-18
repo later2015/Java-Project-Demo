@@ -9,3 +9,10 @@ jax-rs是写restful api常用的技术
 
 * 访问HelloWorldService里配置的restful接口服务地址是 http://localhost:10188/rest/hello/test
 /rest地址路径的配置是在web.xml，配置了/rest 地址对应的包路径。 /hello则在rest服务类里配置了其路径。 /test是对应方法的参数
+
+##2016.08.18 update
+
+* 增加了对json的支持
+* 测试get返回json的地址： http://localhost:10188/rest/hello/get
+* 测试post json请求的地址： http://localhost:10188/rest/hello/post
+  请求内容： {"title":"test","singer":"dog"} 格式选 application/json; charset=UTF-8

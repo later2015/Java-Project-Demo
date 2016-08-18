@@ -14,6 +14,12 @@
             <param-name>com.sun.jersey.config.property.packages</param-name>
             <param-value>com.later.rest</param-value>
         </init-param>
+
+        <init-param>
+            <!--this setting is to support json-->
+            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+        </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
 
