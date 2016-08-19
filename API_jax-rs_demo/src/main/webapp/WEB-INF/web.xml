@@ -29,4 +29,36 @@
         <!-- this path map to the servlet com.later.rest with name "jersey-serlvet"-->
     </servlet-mapping>
 
+<!--below is for spring intergration-->
+    <context-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>classpath:applicationContext.xml</param-value>
+    </context-param>
+
+    <listener>
+        <listener-class>
+            org.springframework.web.context.ContextLoaderListener
+        </listener-class>
+    </listener>
+
+    <servlet>
+        <servlet-name>spring-jersey-serlvet</servlet-name>
+        <servlet-class>
+            com.sun.jersey.spi.spring.container.servlet.SpringServlet
+        </servlet-class>
+        <init-param>
+            <param-name>
+                com.sun.jersey.config.property.packages
+            </param-name>
+            <param-value>com.later.spring</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>spring-jersey-serlvet</servlet-name>
+        <url-pattern>/spring/*</url-pattern>
+        <!-- this path map to the servlet com.later.rest with name "jersey-serlvet"-->
+    </servlet-mapping>
+    <!--above is for spring intergration-->
 </web-app>
