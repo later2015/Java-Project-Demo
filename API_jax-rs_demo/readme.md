@@ -65,3 +65,5 @@ jax-rs是写restful api常用的技术
 
 ###至此，该demo已经集成了支持Json，jax-rs api，Spring，大家再根据自己需要集成相应的访问db的模块，这框架基本上就可以满足了大部分的接口开发需求了。
 #是不是发现搭建技术架构，也没有那么难？
+
+http://www.mkyong.com/tutorials/jax-rs-tutorials/
