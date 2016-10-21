@@ -1,15 +1,15 @@
-package demo4;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
 /**
  * Routing (按路线发送接收)
 
  使用场景：发送端按routing key发送消息，不同的接收端按不同的routing key接收消息。
  * Created by liqiliang <liqiliang@baibu.la> on 2016/10/12.
  */
-public class EmitLogDirect {
-    private static final String EXCHANGE_NAME = "direct_logs";
+public class directExchange {
+    private static final String EXCHANGE_NAME = "si.test.exchange2";
 
     public static void main(String[] argv) throws Exception {
 
@@ -18,7 +18,8 @@ public class EmitLogDirect {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
-        channel.exchangeDeclare(EXCHANGE_NAME, "direct");
+        channel.exchangeDeclare(EXCHANGE_NAME, "direct",true);//第三个true是durable=true的意思
+        //channel.queueDeclare("si.test.queue", true, false, false, null);
 
         String severity = getSeverity(argv);
         String message = getMessage(argv);
@@ -32,14 +33,14 @@ public class EmitLogDirect {
 
     private static String getSeverity(String[] strings){
         if (strings.length < 1)
-            return "info";
+            return "si.test.binding";
  //           return "info";
         return strings[0];
     }
 
     private static String getMessage(String[] strings){
         if (strings.length < 2)
-            return "Hello World!";
+            return "Hello World!cccccc中文3322";
         return joinStrings(strings, " ", 1);
     }
 

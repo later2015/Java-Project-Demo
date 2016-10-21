@@ -10,7 +10,8 @@ public class ReceiveLogsDirect {
     private static final String EXCHANGE_NAME = "direct_logs";
 
     public static void main(String[] argv) throws Exception {
-
+        argv=new String[1];
+        argv[0]="info";
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("192.168.85.128");
         Connection connection = factory.newConnection();
