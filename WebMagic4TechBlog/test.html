@@ -1,48 +1,312 @@
-<p><font size="6">connection reset by peer常见原因及解决方法：</font> <br>
-<br></p>
+![log4j2](http://static.oschina.net/uploads/space/2015/1014/155659_JkxF_1011576.jpg "log4j2")
+
+# 注
+
+本文是使用 slf4j + log4j2 示例，由于 slf4j 只是一个统一接口包，log4j / log4j2 / logback 等都是有其实现类，所以本文中是以 slf4j 为例。若有朋友坚持不使用 slf4j ，则将代码中 slf4j 相关的都做对应更改即可，并不麻烦。
+
+# 序
+
+一般情况下，每当我们使用 slf4j 等log组件时，都是在需要记载日志的类中，创建一个静态的 Logger 成员变量，然后调用 debug,info,error 等方法。这就意味着我们每一个要记载日志的类，都需要先定义一个静态的成员变量，这样才打印出正确的前缀（带有类名称）
+
+## 一、现状
+
+我们以码云中几个热门的java项目为例（下面的代码片段都是 star 超过 500+ 的项目）
+``` java
+public class DepartController {
+    private static final Logger logger = Logger.getLogger(DepartController.class);
+    ... method() {
+        logger.info("some things!");
+    }
+}
+```
+``` java
+@Controller
+public class LoginController extends BaseController {
+    private static final Logger LOGGER = LogManager.getLogger(LoginController.class);
+    ... method() {
+        LOGGER.info("some things!");
+    }
+}
+```
+``` java
+public class AccountAction extends BaseAction&lt;Account&gt; {
+    private static final Logger logger = LoggerFactory.getLogger(AccountAction.class);
+    ... method() {
+        logger.info("some things!");
+    }
+}
+```
+
+## 二、假设一个更优的 Logger
+
+不知道大家是否有想过，要是有一个 Logger 直接提供静态的 debug/info/error 方法，就不用每个类都要去定义静态的成员变量了，比方说下面的代码（为了不被误解，我们将封装过的 Logger 命名为 GjpLogger ）：
+``` java
+public class LoginController extends BaseController {
+    ... method() {
+        GjpLogger.info("some things!");
+    }
+}
+```
+注意，我们没有定义静态的 Logger 成员变量！
+
+## 三、如何封装实现假设的 Logger
+
+### 1、封装前科普：java.lang.StackTraceElement
+
+该类元素代表一个堆栈帧。除了一个在堆栈的顶部所有的栈帧代表一个方法调用。在堆栈顶部的帧表示在将其生成的堆栈跟踪的执行点。
+
+该类包含4个可用的get方法：getClassName()、getMethodName()、getLineNumber()、getFileName()
+
+(细心的同学估计已经猜到了，没错！我们就从它下手，获取出被调用的那个方法所属的 类名、方法名以及当前行号)
+
+### 2、封装前科普：Thread.currentThread().getStackTrace()
+
+该方法返回一个代表该线程的堆栈转储堆栈跟踪元素的数组。这将返回一个零长度数组，如果该线程尚未启动或已经终止。
+
+举个例子，我们调用一下项目中的 MainController.login() 方法，看可以打印出什么
+``` java
+StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+
+for (StackTraceElement s : callStack) {
+    System.out.println("s.getClassName() -&gt; " + s.getClassName());
+    System.out.println("s.getMethodName() -&gt; " + s.getMethodName());
+    System.out.println("s.getLineNumber() -&gt; " + s.getLineNumber());
+}
+```
+``` console
+s.getClassName() -&gt; java.lang.Thread
+s.getMethodName() -&gt; getStackTrace
+s.getLineNumber() -&gt; 1568
+s.getLineNumber() -&gt; 69
+s.getClassName() -&gt; com.guijianpan.framework.log.GjpLogger
+s.getMethodName() -&gt; info
+s.getLineNumber() -&gt; 94
+s.getClassName() -&gt; com.guijianpan.system.controller.MainController
+s.getMethodName() -&gt; login
+s.getLineNumber() -&gt; 34
+s.getClassName() -&gt; com.guijianpan.system.controller.MainController$$FastClassBySpringCGLIB$$d0dda813
+s.getMethodName() -&gt; invoke
+s.getLineNumber() -&gt; -1
+s.getClassName() -&gt; org.springframework.cglib.proxy.MethodProxy
+s.getMethodName() -&gt; invoke
+s.getLineNumber() -&gt; 204
+s.getClassName() -&gt; org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation
+s.getMethodName() -&gt; invokeJoinpoint
+s.getLineNumber() -&gt; 717
+s.getClassName() -&gt; org.springframework.aop.framework.ReflectiveMethodInvocation
+s.getMethodName() -&gt; proceed
+s.getLineNumber() -&gt; 157
+```
+我们可以看到，打印出了很多信息，实际上，我们要的只是 上面日志的 第8-10行内容
+
+### 3、获取想要的 StackTraceElement
+``` java
+public static StackTraceElement findCaller() {
+    // 获取堆栈信息
+    StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+    if(null == callStack) return null;
+
+    // 最原始被调用的堆栈信息
+    StackTraceElement caller = null;
+    // 日志类名称
+    String logClassName = GjpLogger.class.getName();
+    // 循环遍历到日志类标识
+    boolean isEachLogClass = false;
+    
+    // 遍历堆栈信息，获取出最原始被调用的方法信息
+    for (StackTraceElement s : callStack) {
+        // 遍历到日志类
+        if(logClassName.equals(s.getClassName())) {
+            isEachLogClass = true;
+        }
+        // 下一个非日志类的堆栈，就是最原始被调用的方法
+        if(isEachLogClass) {
+            if(!logClassName.equals(s.getClassName())) {
+                isEachLogClass = false;
+                caller = s;
+                break;
+            }
+        }
+    }
+    
+    return caller;
+}
+```
+到此，我们就取到了 MainController.login() 的 StackTraceElement 对象
+
+### 4、封装 logger -&gt; debug / info / error
+``` java
+private static Logger logger() {
+    StackTraceElement caller = findCaller();
+    if(null == caller) return LoggerFactory.getLogger(GjpLogger.class);
+    
+    // 实例化一个原始被调用的类 Logger 对象，并且带上 方法名称、行号，更方便的通过日志定位代码
+    Logger log = LoggerFactory.getLogger(caller.getClassName() + "." + caller.getMethodName() + "() Line: " + caller.getLineNumber());
+    
+    return log;
+}
+
+/**
+ * 静态的 debug 方法
+ */
+public static void debug(String msg) {
+    debug(msg, null);
+}
+```
+
+### 5、调用 logger
+``` java
+public class MainController {
+    public ModelAndView login() {
+        GjpLogger.info("test log info!");
+        return render("login/login");
+    }
+}
+```
+
+### 6、logger 结果
+``` console
+2016-10-14 22:56:12 INFO  com.guijianpan.system.controller.MainController.login() Line: 34 - test log info!
+```
+
+## 附：GjpLogger.java
+
+``` java
+package com.guijianpan.framework.log;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/** 
+ * Gjp日志工具类 {logger name 值为 [className].[methodName]() Line: [fileLine]} &lt;br/&gt;
+ * 若要自定义可配置打印出执行的方法名和执行行号位置等信息，请参考RequestLoggerLogger.java&lt;br/&gt;
+ * @see com.guijianpan.framework.log.log4j.RequestLogger
+ * @author yzChen
+ * @date 2016年10月13日 下午11:50:59 
+ */
+public class GjpLogger {
+    
+    /**
+     * 获取最原始被调用的堆栈信息
+     * @return    
+     * @author yzChen
+     * @date 2016年10月13日 下午11:50:59 
+     */
+    public static StackTraceElement findCaller() {
+        // 获取堆栈信息
+        StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
+        if(null == callStack) return null;
+
+        // 最原始被调用的堆栈信息
+        StackTraceElement caller = null;
+        // 日志类名称
+        String logClassName = GjpLogger.class.getName();
+        // 循环遍历到日志类标识
+        boolean isEachLogClass = false;
+        
+        // 遍历堆栈信息，获取出最原始被调用的方法信息
+        for (StackTraceElement s : callStack) {
+            // 遍历到日志类
+            if(logClassName.equals(s.getClassName())) {
+                isEachLogClass = true;
+            }
+            // 下一个非日志类的堆栈，就是最原始被调用的方法
+            if(isEachLogClass) {
+                if(!logClassName.equals(s.getClassName())) {
+                    isEachLogClass = false;
+                    caller = s;
+                    break;
+                }
+            }
+        }
+        
+        return caller;
+    }
+
+    /**
+     * 自动匹配请求类名，生成logger对象，此处 logger name 值为 [className].[methodName]() Line: [fileLine]
+     * @return    
+     * @author yzChen
+     * @date 2016年10月13日 下午11:50:59 
+     */
+    private static Logger logger() {
+        // 最原始被调用的堆栈对象
+        StackTraceElement caller = findCaller();
+        if(null == caller) return LoggerFactory.getLogger(GjpLogger.class);
+        
+        Logger log = LoggerFactory.getLogger(caller.getClassName() + "." + caller.getMethodName() + "() Line: " + caller.getLineNumber());
+        
+        return log;
+    }
 
 
+    public static void trace(String msg) {
+        trace(msg, null);
+    }
+    public static void trace(String msg, Throwable e) {
+        logger().trace(msg, e);
+    }
+    public static void debug(String msg) {
+        debug(msg, null);
+    }
+    public static void debug(String msg, Throwable e) {
+        logger().debug(msg, e);
+    }
+    public static void info(String msg) {
+        info(msg, null);
+    }
+    public static void info(String msg, Throwable e) {
+        logger().info(msg, e);
+    }
+    public static void warn(String msg) {
+        warn(msg, null);
+    }
+    public static void warn(String msg, Throwable e) {
+        logger().warn(msg, e);
+    }
+    public static void error(String msg) {
+        error(msg, null);
+    }
+    public static void error(String msg, Throwable e) {
+        logger().error(msg, e);
+    }
 
-<h2 id="1服务器的并发连接数超过了其承载量服务器会将其中一些连接关闭">1.服务器的并发连接数超过了其承载量，服务器会将其中一些连接关闭</h2>
+}
 
-<p>如果知道实际连接服务器的并发客户端数并没有超过服务器的承载量，则有可能是中了病毒或者木马，引起网络流量异常。</p>
+```
 
-<p><font color="#FF0000"><strong>解决方法：</strong></font>可以使用<font color="#FF0000">netstat -an</font>命令查看网络连接情况。 <br>
-<br></p>
+## 四、附录
 
+### 1、关于获取堆栈代码的质疑
 
+由于评论中很多童鞋都在问关于直接读取堆栈信息的问题，比如说性能方面。性能的话，本人一般都不会深究，具体原因就不说了，当然，最大的原因是有点懒。
 
-<h2 id="2客户端关掉了浏览器而服务器还在给客户端发送数据">2.客户端关掉了浏览器，而服务器还在给客户端发送数据</h2>
+这里，本人另外提一下关于 Log4j2 最终打印控制台时的一部分源码，它也是读取了堆栈信息，循环遍历。以下是源代码（log4j-api-2.7.jar -&gt; org.apache.logging.log4j.status.StatusLogger.java -&gt; Line 229 再跳转到 Line 249）
 
-<p><br></p>
+``` java
+private StackTraceElement getStackTraceElement(final String fqcn, final StackTraceElement[] stackTrace) {
+	if (fqcn == null) {
+		return null;
+	}
+	boolean next = false;
+	for (final StackTraceElement element : stackTrace) {
+		final String className = element.getClassName();
+		if (next &amp;&amp; !fqcn.equals(className)) {
+			return element;
+		}
+		if (fqcn.equals(className)) {
+			next = true;
+		} else if (NOT_AVAIL.equals(className)) {
+			break;
+		}
+	}
+	return null;
+}
+```
 
+### 2、Log4j2.xml 环境搭建及基本配置
 
+[Log4j2.xml 环境搭建及基本配置](https://my.oschina.net/yzChen/blog/758939)
 
-<h2 id="3浏览器按了stop">3.浏览器按了Stop</h2>
-
-<p>这两种情况一般不会影响服务器，但是如果对异常信息没有特别处理，有可能在服务器的日志文件中，重复出现该异常，造成服务器日志文件过大，影响服务器的运行。</p>
-
-<p><font color="#FF0000"><strong>解决方法：</strong></font>可以对引起异常的部分，使用<font color="#FF0000">try…catch</font>捕获异常，然后不输出或只输出一句提示信息，避免输出全部异常信息。 <br>
-<br></p>
-
-
-
-<h2 id="4防火墙的问题">4.防火墙的问题</h2>
-
-<p>如果网络连接通过防火墙，而防火墙一般都会有超时的机制，在网络连接长时间不传输数据时，会关闭这个TCP的会话，关闭后再读写，就会导致异常。</p>
-
-<p><font color="#FF0000"><strong>解决方法：</strong></font>如果关闭防火墙，解决了问题，需要重新配置防火墙，或者自己编写程序实现TCP的长连接。 <br>
-实现TCP的长连接，需要自己定义心跳协议，每隔一段时间，发送一次心跳协议，双方维持连接。 <br>
-<br></p>
-
-
-
-<h2 id="5jsp的buffer问题">5.JSP的buffer问题</h2>
-
-<p>JSP页面缺省缓存为8K,当JSP页面数据比较大的时候，有可能JSP没有完全传递给浏览器。</p>
-
-<p><font color="#FF0000"><strong>解决方法：</strong></font>可以适当调整buffer的大小。</p>
-
-
-
-<pre class="prettyprint"><code class=" hljs mel">&lt;<span class="hljs-variable">%@</span> page buffer=<span class="hljs-string">"100k"</span><span class="hljs-variable">%&gt;</span></code></pre>
+## My Blog
+[blog.chenyuanzhen.com](http://blog.chenyuanzhen.com "倚楼听风雨")
