@@ -14,9 +14,7 @@ public class CnblogsDaoPipeline implements PageModelPipeline<CnblogsUser> {
     }
 
     public void process(CnblogsUser oschinaUser, Task task) {
-        //page.getUrl()
-        task.getSite();
-        System.out.println("获取到的结果："+oschinaUser.getTitle()+"  "+oschinaUser.getCount()+" 评论数："+oschinaUser.getCommentCount()+" site:"+task.getSite());
+        System.out.println("获取到的结果："+oschinaUser.getTitle()+"  "+oschinaUser.getCount()+" 评论数："+oschinaUser.getCommentCount()+" site:"+oschinaUser.getContent());
 //        CnblogsDao oschinaDao = new CnblogsDaoImpl();
 //        int row = oschinaDao.saveUser(oschinaUser);
         System.out.println("###保存成功###" + oschinaUser.toString());

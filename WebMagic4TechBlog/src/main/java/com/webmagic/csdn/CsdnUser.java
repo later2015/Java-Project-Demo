@@ -29,7 +29,7 @@ public class CsdnUser implements AfterExtractor {
     private String count;
 
     //文章内容
-    @ExtractBy(value = "//div[@id='article_content']/",notNull = true)//如果里面内容还有节点的，不能使用text(),会获取不到内容
+    @ExtractBy(value = "//div[@id='article_content']/",notNull = true)//如果里面内容还有节点的，不能使用text(),会获取不到内容.最后有斜杠 / ,取出来的内容则不包含表达式所定义的那个div。如果没有，则包含。
     private String content;
 
     //原文URL TODO 没写好的xpath一定要把notNull set为false，设为true的话，他一直不match，一直没数据，就会一直不触发那个pipeline

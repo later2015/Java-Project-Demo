@@ -16,20 +16,20 @@ import javax.management.JMException;
  * Created by liqiliang on 2016/10/22 10:54.
  */
 
-@TargetUrl("http://blog.Oschina.net/[a-z0-9]+/article/details/\\w+")
-@HelpUrl("http://blog.Oschina.net/ranking.html")
+@TargetUrl("https://my.oschina.net/[u/]?[a-z0-9]+/blog/\\w+")
+@HelpUrl("https://www.oschina.net/blog")
 public class OschinaUser implements AfterExtractor {
 
     //标题
-    @ExtractBy(value = "//h1/span[@class='link_title']/a/text()",notNull = true)
+    @ExtractBy(value = "//div[@class='heading']/text()",notNull = true)
     private String title;
 
     //阅读数
-    @ExtractBy(value = "//div[@class='article_r']/span[@title='阅读次数']/text()",notNull = false)
+    @ExtractBy(value = "//li[@class='read']/span[@id='read']/text()",notNull = false)
     private String count;
 
     //文章内容
-    @ExtractBy(value = "//div[@id='article_content']/",notNull = true)//如果里面内容还有节点的，不能使用text(),会获取不到内容
+    @ExtractBy(value = "//div[@id='blogBody']",notNull = true)//如果里面内容还有节点的，不能使用text(),会获取不到内容
     private String content;
 
     //原文URL TODO 没写好的xpath一定要把notNull set为false，设为true的话，他一直不match，一直没数据，就会一直不触发那个pipeline
@@ -37,7 +37,7 @@ public class OschinaUser implements AfterExtractor {
     private String fromUrl;
 
     //评论数
-    @ExtractBy(value = "//div[@class='article_r']/span[@title='评论次数']/text()",notNull = false)
+    @ExtractBy(value = "//li[@class='comment']/a/span[@id='comment']/text()",notNull = false)
     private String commentCount;
 
     //标签 TODO
@@ -117,7 +117,7 @@ public class OschinaUser implements AfterExtractor {
         Spider spider = OOSpider.create(
                 Site.me().setRetryTimes(3).setSleepTime(1000),
                 new OschinaDaoPipeline(), OschinaUser.class)
-                .addUrl("http://blog.Oschina.net/ranking.html").thread(5);//http://blog.Oschina.net/fdipzone/article/details/52824243
+                .addUrl("https://my.oschina.net/u/2249566/blog/758673").thread(5);//https://my.oschina.net/u/2249566/blog/758673
         SpiderMonitor.instance().register(spider);
         spider.start();
     }
