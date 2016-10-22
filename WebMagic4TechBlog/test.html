@@ -1,0 +1,48 @@
+<p><font size="6">connection reset by peer常见原因及解决方法：</font> <br>
+<br></p>
+
+
+
+<h2 id="1服务器的并发连接数超过了其承载量服务器会将其中一些连接关闭">1.服务器的并发连接数超过了其承载量，服务器会将其中一些连接关闭</h2>
+
+<p>如果知道实际连接服务器的并发客户端数并没有超过服务器的承载量，则有可能是中了病毒或者木马，引起网络流量异常。</p>
+
+<p><font color="#FF0000"><strong>解决方法：</strong></font>可以使用<font color="#FF0000">netstat -an</font>命令查看网络连接情况。 <br>
+<br></p>
+
+
+
+<h2 id="2客户端关掉了浏览器而服务器还在给客户端发送数据">2.客户端关掉了浏览器，而服务器还在给客户端发送数据</h2>
+
+<p><br></p>
+
+
+
+<h2 id="3浏览器按了stop">3.浏览器按了Stop</h2>
+
+<p>这两种情况一般不会影响服务器，但是如果对异常信息没有特别处理，有可能在服务器的日志文件中，重复出现该异常，造成服务器日志文件过大，影响服务器的运行。</p>
+
+<p><font color="#FF0000"><strong>解决方法：</strong></font>可以对引起异常的部分，使用<font color="#FF0000">try…catch</font>捕获异常，然后不输出或只输出一句提示信息，避免输出全部异常信息。 <br>
+<br></p>
+
+
+
+<h2 id="4防火墙的问题">4.防火墙的问题</h2>
+
+<p>如果网络连接通过防火墙，而防火墙一般都会有超时的机制，在网络连接长时间不传输数据时，会关闭这个TCP的会话，关闭后再读写，就会导致异常。</p>
+
+<p><font color="#FF0000"><strong>解决方法：</strong></font>如果关闭防火墙，解决了问题，需要重新配置防火墙，或者自己编写程序实现TCP的长连接。 <br>
+实现TCP的长连接，需要自己定义心跳协议，每隔一段时间，发送一次心跳协议，双方维持连接。 <br>
+<br></p>
+
+
+
+<h2 id="5jsp的buffer问题">5.JSP的buffer问题</h2>
+
+<p>JSP页面缺省缓存为8K,当JSP页面数据比较大的时候，有可能JSP没有完全传递给浏览器。</p>
+
+<p><font color="#FF0000"><strong>解决方法：</strong></font>可以适当调整buffer的大小。</p>
+
+
+
+<pre class="prettyprint"><code class=" hljs mel">&lt;<span class="hljs-variable">%@</span> page buffer=<span class="hljs-string">"100k"</span><span class="hljs-variable">%&gt;</span></code></pre>
