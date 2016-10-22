@@ -1,0 +1,5 @@
+# RabbitMQ 的java使用demo
+
+该demo主要介绍java客户端只使用rabbitmq自家的amqp客户端直连rabbitMQ的几种方法。
+
+一个文件夹就是其中一个使用场景。主要的地方代码里都有注释了。
