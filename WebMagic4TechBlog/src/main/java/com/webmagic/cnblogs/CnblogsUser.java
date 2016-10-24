@@ -21,7 +21,7 @@ import javax.management.JMException;
 public class CnblogsUser implements AfterExtractor {
 
     //标题
-    @ExtractBy(value = "//h1/a[@id='cb_post_title_url']/text()",notNull = true)
+    @ExtractBy(value = "//h1/a[@id='cb_post_title_url']/text()",notNull = false)
     private String title;
 
     //阅读数 //Cnblogs无法获取该参数
@@ -29,7 +29,7 @@ public class CnblogsUser implements AfterExtractor {
     private String count;
 
     //文章内容
-    @ExtractBy(value = "//div[@id='cnblogs_post_body']",notNull = true)//如果里面内容还有节点的，不能使用text(),会获取不到内容
+    @ExtractBy(value = "//div[@id='cnblogs_post_body']",notNull = false)//如果里面内容还有节点的，不能使用text(),会获取不到内容
     private String content;
 
     //原文URL TODO 没写好的xpath一定要把notNull set为false，设为true的话，他一直不match，一直没数据，就会一直不触发那个pipeline
@@ -146,7 +146,7 @@ public class CnblogsUser implements AfterExtractor {
         Spider spider = OOSpider.create(
                 Site.me().setRetryTimes(3).setSleepTime(1000),
                 new CnblogsDaoPipeline(), CnblogsUser.class)
-                .addUrl("http://www.cnblogs.com/pick/").thread(5);//http://blog.Cnblogs.net/fdipzone/article/details/52824243
+                .addUrl("http://www.cnblogs.com/pick/").thread(1);//http://blog.Cnblogs.net/fdipzone/article/details/52824243
         SpiderMonitor.instance().register(spider);
         spider.start();
     }
