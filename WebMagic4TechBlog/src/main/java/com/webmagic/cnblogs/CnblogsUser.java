@@ -40,8 +40,14 @@ public class CnblogsUser implements AfterExtractor {
     private String commentCount;
 
     //标签 TODO
-    @ExtractBy(value = "//div[@id='OSC_Content']/div/div/table/tbody/tr[2]/td/text()",notNull = false)
-    private String tags;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][1]/a/text()",notNull = false)
+    private String tags1;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][2]/a/text()",notNull = false)
+    private String tags2;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][3]/a/text()",notNull = false)
+    private String tags3;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][4]/a/text()",notNull = false)
+    private String tags4;
 
     //分类 TODO
     @ExtractBy(value = "//div[@id='OSC_Content']/div/div/table/tbody/tr[3]/td/text()",notNull = false)
@@ -94,12 +100,36 @@ public class CnblogsUser implements AfterExtractor {
         this.commentCount = commentCount;
     }
 
-    public String getTags() {
-        return tags;
+    public String getTags1() {
+        return tags1;
     }
 
-    public void setTags(String tags) {
-        this.tags = tags;
+    public void setTags1(String tags1) {
+        this.tags1 = tags1;
+    }
+
+    public String getTags2() {
+        return tags2;
+    }
+
+    public void setTags2(String tags2) {
+        this.tags2 = tags2;
+    }
+
+    public String getTags3() {
+        return tags3;
+    }
+
+    public void setTags3(String tags3) {
+        this.tags3 = tags3;
+    }
+
+    public String getTags4() {
+        return tags4;
+    }
+
+    public void setTags4(String tags4) {
+        this.tags4 = tags4;
     }
 
     public String getCategory() {

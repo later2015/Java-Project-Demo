@@ -16,12 +16,12 @@ import javax.management.JMException;
  * Created by liqiliang on 2016/10/22 10:54.
  */
 
-@TargetUrl("https://my.oschina.net/[u/]?[a-z0-9]+/blog/\\w+")
+@TargetUrl({"https://my.oschina.net/[a-z0-9]+/blog/\\w+","https://my.oschina.net/u/[a-z0-9]+/blog/\\w+"})
 @HelpUrl("https://www.oschina.net/blog")
 public class OschinaUser implements AfterExtractor {
 
     //标题
-    @ExtractBy(value = "//div[@class='heading']/text()",notNull = true)
+    @ExtractBy(value = "//div[@class='heading']/text()|//div[@class='blog-heading']/div/text()",notNull = true)
     private String title;
 
     //阅读数
@@ -29,23 +29,27 @@ public class OschinaUser implements AfterExtractor {
     private String count;
 
     //文章内容
-    @ExtractBy(value = "//div[@id='blogBody']",notNull = true)//如果里面内容还有节点的，不能使用text(),会获取不到内容
+    @ExtractBy(value = "//div[@id='blogBody']",notNull = false)//如果里面内容还有节点的，不能使用text(),会获取不到内容
     private String content;
 
     //原文URL TODO 没写好的xpath一定要把notNull set为false，设为true的话，他一直不match，一直没数据，就会一直不触发那个pipeline
-    @ExtractBy(value = "//div[@id='OSC_Content']/div/div/div[@class='stat']/a[3]/span/text()",notNull = false)
     private String fromUrl;
 
     //评论数
     @ExtractBy(value = "//li[@class='comment']/a/span[@id='comment']/text()",notNull = false)
     private String commentCount;
 
-    //标签 TODO
-    @ExtractBy(value = "//div[@id='OSC_Content']/div/div/table/tbody/tr[2]/td/text()",notNull = false)
-    private String tags;
-
-    //分类 TODO
-    @ExtractBy(value = "//div[@id='OSC_Content']/div/div/table/tbody/tr[3]/td/text()",notNull = false)
+    //标签
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][1]/a/text()",notNull = false)
+    private String tags1;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][2]/a/text()",notNull = false)
+    private String tags2;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][3]/a/text()",notNull = false)
+    private String tags3;
+    @ExtractBy(value = "//div[@class='tags']/span[@class='tag' and @id='tag'][4]/a/text()",notNull = false)
+    private String tags4;
+    //分类
+    @ExtractBy(value = "//li[@class='classify']/span[@id='classify']/a/text()",notNull = false)
     private String category;
 
 
@@ -95,12 +99,36 @@ public class OschinaUser implements AfterExtractor {
         this.commentCount = commentCount;
     }
 
-    public String getTags() {
-        return tags;
+    public String getTags1() {
+        return tags1;
     }
 
-    public void setTags(String tags) {
-        this.tags = tags;
+    public void setTags1(String tags1) {
+        this.tags1 = tags1;
+    }
+
+    public String getTags2() {
+        return tags2;
+    }
+
+    public void setTags2(String tags2) {
+        this.tags2 = tags2;
+    }
+
+    public String getTags3() {
+        return tags3;
+    }
+
+    public void setTags3(String tags3) {
+        this.tags3 = tags3;
+    }
+
+    public String getTags4() {
+        return tags4;
+    }
+
+    public void setTags4(String tags4) {
+        this.tags4 = tags4;
     }
 
     public String getCategory() {
@@ -117,7 +145,7 @@ public class OschinaUser implements AfterExtractor {
         Spider spider = OOSpider.create(
                 Site.me().setRetryTimes(3).setSleepTime(1000),
                 new OschinaDaoPipeline(), OschinaUser.class)
-                .addUrl("https://my.oschina.net/u/2249566/blog/758673").thread(5);//https://my.oschina.net/u/2249566/blog/758673
+                .addUrl("https://my.oschina.net/u/2249566/blog/758673").thread(1);//https://my.oschina.net/u/2249566/blog/758673
         SpiderMonitor.instance().register(spider);
         spider.start();
     }
