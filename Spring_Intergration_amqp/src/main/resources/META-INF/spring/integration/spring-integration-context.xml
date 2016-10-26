@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:int-amqp="http://www.springframework.org/schema/integration/amqp"
+	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
+	xsi:schemaLocation="http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
+		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd
+		http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- From STDIN To RabbitMQ -->
+	<!-- 配置读取终端的输入put到int-amqp所定义的routing-key去-->
+	<int-stream:stdin-channel-adapter id="consoleIn"
+		channel="toRabbit">
+		<int:poller fixed-delay="1000" max-messages-per-poll="1" />
+	</int-stream:stdin-channel-adapter>
+
+	<!-- 默认的channal配置
+	<int:channel id="toRabbit" />-->
+
+	<int-amqp:outbound-channel-adapter
+		channel="toRabbit" amqp-template="amqpTemplate" exchange-name="si.test.exchange22"
+		routing-key="si.test.binding22" />
+
+	<!-- 加入logging的channal配置,logger-name需要在log4j里面配置 -->
+	<int:channel id="toRabbit">
+		<int:interceptors>
+			<ref bean="interceptorbean" />
+			<int:wire-tap channel="toRabbitLoggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:logging-channel-adapter id="toRabbitLoggingChannel" log-full-message="true" logger-name="tapOutbound" level="INFO" />
+	<!-- From STDIN To RabbitMQ -->
+
+	<!-- From RabbitMQ To STDOUT -->
+	<int-amqp:inbound-channel-adapter channel="fromRabbit"
+		queue-names="si.test.queue22" connection-factory="connectionFactory" />
+
+	<int:channel id="fromRabbit">
+		<int:interceptors>
+			<ref bean="interceptorbean" /> <!--拦截器作用在Channel上，可以实现编解码、加密解密、鉴权、日志、监控等操作。 -->
+			<int:wire-tap channel="loggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<bean id="interceptorbean" class="org.springframework.integration.samples.amqp.service.interceptorService"/>
+	<int:logging-channel-adapter id="loggingChannel" log-full-message="true" logger-name="tapInbound"
+								 level="INFO" />
+<!--配置命令行输出
+	<int:transformer input-channel="fromRabbit" output-channel="consoleOut" expression="'Received: ' + payload" />
+
+	<int-stream:stdout-channel-adapter id="consoleOut"
+		append-newline="true" />
+		-->
+
+	<!--TODO 这个是配置采用外部class来处理收到的消息-->
+	<int:service-activator input-channel="fromRabbit"
+						   id="serviceActivator" ref="serviceActivatorBean" method="logXml" />
+
+	<bean id="serviceActivatorBean"
+		  class="org.springframework.integration.samples.amqp.service.SubscriberServiceActivator">
+	</bean>
+	<!--TODO -->
+	<!-- From RabbitMQ To STDOUT -->
+
+	<!-- Infrastructure -->
+	<rabbit:connection-factory id="connectionFactory" host="192.168.85.128" />
+	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
+	<rabbit:admin connection-factory="connectionFactory" />
+	<rabbit:queue name="si.test.queue22" />
+<!--这里实现了配置rabbitMQ把si.test.queue绑定到si.test.exchange 对应的si.test.binding,绑定后如果不unbind，这个绑定关系就一直在-->
+	<rabbit:direct-exchange name="si.test.exchange22">
+		<rabbit:bindings>
+			<rabbit:binding queue="si.test.queue22" key="si.test.binding22" />
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+
+
+
+</beans>
