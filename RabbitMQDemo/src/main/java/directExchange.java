@@ -9,7 +9,7 @@ import com.rabbitmq.client.ConnectionFactory;
  * Created by liqiliang <liqiliang@baibu.la> on 2016/10/12.
  */
 public class directExchange {
-    private static final String EXCHANGE_NAME = "si.test.exchange2";
+    private static final String EXCHANGE_NAME = "si.test.exchange";
 
     public static void main(String[] argv) throws Exception {
 

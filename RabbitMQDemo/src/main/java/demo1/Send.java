@@ -17,9 +17,11 @@ public class Send {
 
         channel.queueDeclare(QUEUE_NAME, false, false, false, null);
         String message = "Hello World!";
-        channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-        System.out.println(" [x] Sent '" + message + "'");
-
+        boolean flag=true;
+        while (flag) {
+            channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
+            System.out.println(" [x] Sent '" + message + "'");
+        }
         channel.close();
         connection.close();
     }

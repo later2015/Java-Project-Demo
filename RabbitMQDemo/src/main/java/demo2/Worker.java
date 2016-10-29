@@ -1,13 +1,15 @@
 package demo2;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Connection;
+
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+
 /**
  * Created by liqiliang <liqiliang@baibu.la> on 2016/10/12.
  */
 public class Worker {
-    private static final String TASK_QUEUE_NAME = "task_queue";
+    private static final String TASK_QUEUE_NAME = "si.test.queue";
 
     public static void main(String[] argv) throws Exception {
 
@@ -26,14 +28,20 @@ public class Worker {
         QueueingConsumer consumer = new QueueingConsumer(channel);
         channel.basicConsume(TASK_QUEUE_NAME, false, consumer);
 //在使用channel.basicConsume接收消息时使autoAck为false，即不自动会发ack，由channel.basicAck()在消息处理完成后发送消息。
-
+        int i=0;
         while (true) {
+            i++;
+            System.out.println("get Message:::"+i);
             QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+
+//            Map headers= delivery.getProperties().getHeaders();
+//            System.out.println("header::"+headers.get("id"));//获取header信息
+
             String message = new String(delivery.getBody());
 
             System.out.println(" [x] Received '" + message + "'");
             doWork(message);
-            System.out.println(" [x] Done");
+            System.out.println(" [x] Done"+delivery.getProperties().getCorrelationId()+delivery.getProperties().getMessageId());//TODO 获取header的内容
 
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
         }
@@ -41,7 +49,8 @@ public class Worker {
 
     private static void doWork(String task) throws InterruptedException {
         for (char ch: task.toCharArray()) {
-            if (ch == '.') Thread.sleep(1000);
+            ;
+            //if (ch == '.') Thread.sleep(1000);
         }
     }
 }
