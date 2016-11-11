@@ -21,8 +21,8 @@
 	<int:channel id="toRabbit" />-->
 
 	<int-amqp:outbound-channel-adapter
-		channel="toRabbit" amqp-template="amqpTemplate" exchange-name="si.test.exchange22"
-		routing-key="si.test.binding22" />
+		channel="toRabbit" amqp-template="amqpTemplate" exchange-name="si.test.exchange"
+		routing-key="si.test.binding" />
 
 	<!-- 加入logging的channal配置,logger-name需要在log4j里面配置 -->
 	<int:channel id="toRabbit">
@@ -36,7 +36,7 @@
 
 	<!-- From RabbitMQ To STDOUT -->
 	<int-amqp:inbound-channel-adapter channel="fromRabbit"
-		queue-names="si.test.queue22" connection-factory="connectionFactory" />
+		queue-names="si.test.queue" connection-factory="connectionFactory" />
 
 	<int:channel id="fromRabbit">
 		<int:interceptors>
@@ -54,9 +54,38 @@
 		append-newline="true" />
 		-->
 
+	<!-- 定义输出的channel-->
+	<int-amqp:outbound-channel-adapter
+			channel="outPutToRabbit" amqp-template="amqpTemplate" exchange-name="si.test.exchange.out"
+			routing-key="si.test.binding.out" />
+	<int-amqp:outbound-channel-adapter
+			channel="outPutToRabbit2" amqp-template="amqpTemplate" exchange-name="si.test.exchange.out"
+			routing-key="si.test.binding.out2" />
+
+	<rabbit:queue name="si.test.queue.out" />
+	<rabbit:queue name="si.test.queue.out2" />
+	<!--这里实现了配置rabbitMQ把si.test.queue绑定到si.test.exchange 对应的si.test.binding,绑定后如果不unbind，这个绑定关系就一直在-->
+	<rabbit:direct-exchange name="si.test.exchange.out">
+		<rabbit:bindings>
+			<rabbit:binding queue="si.test.queue.out" key="si.test.binding.out" />
+			<rabbit:binding queue="si.test.queue.out2" key="si.test.binding.out" />
+		</rabbit:bindings>
+	</rabbit:direct-exchange>
+
+	<int:channel id="outPutToRabbit">
+		<int:interceptors>
+			<ref bean="interceptorbean" /> <!--拦截器作用在Channel上，可以实现编解码、加密解密、鉴权、日志、监控等操作。 -->
+			<int:wire-tap channel="loggingChannel" />
+		</int:interceptors>
+	</int:channel>
+	<int:channel id="outPutToRabbit2">
+	</int:channel>
+	<!-- 定义输出的channel-->
+
 	<!--TODO 这个是配置采用外部class来处理收到的消息-->
+
 	<int:service-activator input-channel="fromRabbit"
-						   id="serviceActivator" ref="serviceActivatorBean" method="logXml" />
+						   id="serviceActivator" ref="serviceActivatorBean" method="logXml" output-channel="outPutToRabbit" />
 
 	<bean id="serviceActivatorBean"
 		  class="org.springframework.integration.samples.amqp.service.SubscriberServiceActivator">
@@ -68,11 +97,11 @@
 	<rabbit:connection-factory id="connectionFactory" host="192.168.85.128" />
 	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
 	<rabbit:admin connection-factory="connectionFactory" />
-	<rabbit:queue name="si.test.queue22" />
+	<rabbit:queue name="si.test.queue" />
 <!--这里实现了配置rabbitMQ把si.test.queue绑定到si.test.exchange 对应的si.test.binding,绑定后如果不unbind，这个绑定关系就一直在-->
-	<rabbit:direct-exchange name="si.test.exchange22">
+	<rabbit:direct-exchange name="si.test.exchange">
 		<rabbit:bindings>
-			<rabbit:binding queue="si.test.queue22" key="si.test.binding22" />
+			<rabbit:binding queue="si.test.queue" key="si.test.binding" />
 		</rabbit:bindings>
 	</rabbit:direct-exchange>
 
