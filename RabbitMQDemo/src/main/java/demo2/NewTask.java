@@ -34,9 +34,13 @@ public class NewTask {
 
             /////////set header part
             Map headers=new HashMap();
-            headers.put("id","93958203850");
+            headers.put("idDDD","abcxxxxxxxxxxx.cdexxxxxxxxxx");
             headers.put("newid","93958203850");
-            headers.put("timestamp","999999999999999999");
+            headers.put("MsgType","999999999999999999");
+            headers.put("MsgID","999999999999999999");
+            headers.put("SessionID","999999999999999999");
+            headers.put("FileName","{\"key\":\"value\"},aa:5t2345,bb=23523");
+
             AMQP.BasicProperties b=new AMQP.BasicProperties("a", "UTF-8", headers, 2, 1, "correlationId", "replyTo", null,"messageId", new Date(), "type","guest","appId222", null);
             ///set header part
 
@@ -52,7 +56,7 @@ public class NewTask {
 
     private static String getMessage(String[] strings){
         if (strings.length < 1)
-            return "Hello World!665555";
+            return "Hello World!6655559999999999999999999999999999999";
         return joinStrings(strings, " ");
     }
 
