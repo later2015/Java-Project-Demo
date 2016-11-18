@@ -24,7 +24,7 @@ public class CsdnDaoImpl implements CsdnDao {
         sqlValues.add(user.getContent());
         sqlValues.add(user.getFromUrl());
         sqlValues.add(user.getCommentCount());
-        sqlValues.add(user.getTags());
+        //sqlValues.add(user.getTags());
         sqlValues.add(user.getCategory());
 
         int result = dbhelper.executeUpdate(sql.toString(), sqlValues);
