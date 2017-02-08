@@ -1,5 +1,7 @@
 # Java-Project-Demo
 project demos for java project
+###珠三角高级Java技术交流群 479189837
+
 ##默认约定
 * 本文件为根目录说明，与本文件同级别的每一个目录为一个demo。
 * 一个demo里可能会有多个project，如dubbo的demo，有provider，consumer，api三个project。
