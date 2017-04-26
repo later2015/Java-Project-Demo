@@ -27,6 +27,14 @@ public class Fibonacci {
         return fibonacci(n - 1) + fibonacci(n - 2);
     }
 
+    /**
+    * 数组模式，效率更高
+    *
+    * @param 
+    * @return 
+    * @author liqiliang <liqiliang@baibu.la>
+    * @since 2017/4/26 - 17:05
+    */
     public int fibonacciNew(int n) {
         int result = 0;
         int[] f = new int[n];
