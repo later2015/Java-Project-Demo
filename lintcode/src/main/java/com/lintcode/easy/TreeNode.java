@@ -2,6 +2,7 @@ package com.lintcode.easy;
 
 /**
  * Created by liqiliang <liqiliang@baibu.la> on 2017/4/26.
+ * lintCode专用treeNode类
  */
 public class TreeNode {
     public int val;
