@@ -36,7 +36,7 @@ public class MaxNode {
         return maxNode;
     }
 
-    //递归法前序遍历二叉树，遍历结果放到ArrayList里
+    //递归法后序遍历二叉树，遍历结果放到ArrayList里
     public ArrayList<TreeNode> helper(TreeNode root, ArrayList<TreeNode> result) {
         if (root == null) {
             return result;
