@@ -10,7 +10,7 @@
 
 	<properties>
 		<spring.framework.version>3.0.5.RELEASE</spring.framework.version>
-		<spring.amqp.version>1.0.0.RELEASE</spring.amqp.version>
+		<spring.amqp.version>2.3.11</spring.amqp.version>
 	</properties>
 
 	<dependencies>
